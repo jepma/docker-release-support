@@ -12,6 +12,7 @@ import (
 )
 
 var cfgFile string
+var workDir string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -37,14 +38,19 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
+	defaultWorkdir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 
+	// Global flags
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.release-support.yaml)")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	RootCmd.PersistentFlags().BoolP("dry-run", "d", false, "Enable dry-run mode")
+	RootCmd.PersistentFlags().StringVar(&workDir, "w", defaultWorkdir, "Provide work-dir")
+
+	// Set working-dir
+	os.Chdir(workDir)
 }
 
 // initConfig reads in config file and ENV variables if set.

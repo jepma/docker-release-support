@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// minorCmd represents the minor command
-var minorCmd = &cobra.Command{
+// releaseMinorCmd represents the minor command
+var releaseMinorCmd = &cobra.Command{
 	Use:   "minor",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
@@ -26,7 +26,7 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	releaseCmd.AddCommand(minorCmd)
+	releaseCmd.AddCommand(releaseMinorCmd)
 
 	// Here you will define your flags and configuration settings.
 

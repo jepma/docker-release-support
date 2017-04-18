@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// majorCmd represents the major command
-var majorCmd = &cobra.Command{
+// ReleaesMajorCmd represents the major command
+var ReleaesMajorCmd = &cobra.Command{
 	Use:   "major",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
@@ -26,7 +26,7 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	releaseCmd.AddCommand(majorCmd)
+	releaseCmd.AddCommand(ReleaesMajorCmd)
 
 	// Here you will define your flags and configuration settings.
 

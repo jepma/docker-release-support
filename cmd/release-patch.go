@@ -5,37 +5,55 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
 
-// patchCmd represents the patch command
-var patchCmd = &cobra.Command{
+// releasePatchCmd represents the patch command
+var releasePatchCmd = &cobra.Command{
 	Use:   "patch",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Bump your version with PATCH level.",
+	Long: `By running the release patch command we will tag your code
+and make sure it will be properly pushed upstream.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+By running release patch we will bump it with PATCH level.
+
+We will check if:
+- there are no pending changes
+- actually is a change since last commit`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("patch called")
+		releasePatch()
 	},
 }
 
 func init() {
-	releaseCmd.AddCommand(patchCmd)
+	releaseCmd.AddCommand(releasePatchCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func releasePatch() {
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// patchCmd.PersistentFlags().String("foo", "", "A help for foo")
+	tagLatest := releasePreCheck()
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// patchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Run pre-bump code
+	fmt.Print("@TODO: Implement pre-bump code\n")
+	// application, arguments := createCommand(demoCommand)
+
+	// Version Patch
+	glblVersion.Patch()
+
+	// Output
+	fmt.Printf("Patched to version: %s\n", glblVersion.GetVersionString())
+
+	tagStatus, tagErr := glblGitRepo.TagCreate(tagLatest, parseParameters(glblVersion.GetVersionTag()), "")
+	if tagStatus == false {
+		fmt.Printf("An error occured creating the tag: %s.\n", tagErr)
+		os.Exit(1)
+	}
+
+	// Run post-bump code
+	fmt.Print("@TODO: Implement post-bump code\n")
+
+	os.Exit(1) // DEBUG
 
 }

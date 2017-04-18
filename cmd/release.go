@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -12,30 +14,74 @@ import (
 // releaseCmd represents the release command
 var releaseCmd = &cobra.Command{
 	Use:   "release",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Tag and bag your code",
+	Long: `By running the release command we will tag your code
+and make sure it will be properly pushed upstream.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+We will check if:
+- there are no pending changes
+- actually is a change since last commit
+
+By default we will release patch it for you.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("release called")
+		fmt.Print("Please provide your relase type [patch, minor, major]")
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(releaseCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func releasePreCheck() (tagLatest string) {
+	// Check if dirty
+	if glblVersion.GetDirty() == true {
+		fmt.Printf("Repository contains changes, cannot release patch with a dirty tree.\n")
+		os.Exit(1)
+	}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// releaseCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// Check if diff from latest tag
+	tagLatest, tagLatestErr := glblGitRepo.TagLatest()
+	if tagLatestErr != nil {
+		tagLatest = versionFormat
+	}
+	vDiff := glblGitRepo.DiffSinceRelease(tagLatest)
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// releaseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	if vDiff == false {
+		fmt.Printf("Repository contains no changes since TAG %s.\n", tagLatest)
+		os.Exit(1)
+	}
 
+	return tagLatest
+
+}
+
+func createCommand(command string) (application string, arguments []string) {
+
+	// split command string
+	parts := strings.Fields(command)
+	application = parts[0]
+	arguments = parts[1:len(parts)]
+
+	// check for parameters
+	arguments = parseParametersList(arguments)
+
+	return application, arguments
+}
+
+func parseParameters(value string) string {
+	value = strings.Replace(value, "$TAG", glblVersion.GetVersionTag(), -1)
+	value = strings.Replace(value, "$VERSION", glblVersion.GetVersionString(), -1)
+	value = strings.Replace(value, "$HASH", glblGitRepo.GetRevParse(), -1)
+	return value
+}
+
+func parseParametersList(valueList []string) []string {
+
+	returnList := make([]string, len(valueList))
+
+	for index, element := range valueList {
+		returnList[index] = parseParameters(element)
+	}
+
+	return returnList
 }

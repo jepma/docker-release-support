@@ -14,6 +14,20 @@ This application is inspired by the Makefile originally developed by Mark van Ho
 - https://github.com/jepma/go-git
 - https://github.com/jepma/go-vipersaveconfig
 
+## Building
+
+To build a binary that you could use, you have to first fetch it's dependencies.
+
+```
+$ go get
+```
+
+Now we can build the binary
+
+```
+$ go build -o /usr/local/bin/git-semver
+```
+
 ## How does it work
 
 ## Wishlist
@@ -28,5 +42,5 @@ As a user I would like to determine the format of the version string that is use
 ## Demo
 
 ```bash
-$ clear && go run *.go --workdir /Workspace/playground/release-git-repo debug --help
+$ go run *.go --workdir /Workspace/playground/release-git-repo debug --help
 ```

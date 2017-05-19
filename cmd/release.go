@@ -5,54 +5,37 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// releaseCmd represents the release command
-var releaseCmd = &cobra.Command{
-	Use:   "release",
-	Short: "Tag and bag your code",
-	Long: `By running the release command we will tag your code
-and make sure it will be properly pushed upstream.
-
-We will check if:
-- there are no pending changes
-- actually is a change since last commit
-
-By default we will release patch it for you.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Print("Please provide your release type [patch, minor, major]")
-	},
-}
-
-func init() {
-	RootCmd.AddCommand(releaseCmd)
-}
-
-func releasePreCheck() (tagLatest string) {
+func releasePreCheck() (tagLatest string, err error) {
 
 	// Check if repository is dirty
 	if glblVersion.GetDirty() == true {
-		fmt.Printf("Repository contains changes, cannot release patch with a dirty tree.\n")
-		os.Exit(1)
+		return "", ErrChangesPending
 	}
 
 	// Check if diff from latest tag
-	tagLatest, tagLatestErr := glblGitRepo.TagLatest()
+	tagLatest, tagLatestErr := glblGitRepo.TagLatest(fmt.Sprintf("%s", viper.Get("tag-prefix")))
 	if tagLatestErr != nil {
 		tagLatest = versionFormat
 	}
+
+	// Check if tag exists, if not: go-go-go!
+	if glblGitRepo.TagExists(tagLatest) != true {
+		return tagLatest, nil
+	}
+
 	vDiff := glblGitRepo.DiffSinceRelease(tagLatest)
 
 	if vDiff == false {
 		fmt.Printf("Repository contains no changes since TAG %s.\n", tagLatest)
-		os.Exit(1)
+		return tagLatest, ErrNoChanges
 	}
 
-	return tagLatest
+	return tagLatest, nil
 
 }
 
@@ -70,10 +53,10 @@ func createCommand(command string) (application string, arguments []string) {
 }
 
 // Replace parameters within given value string
-func parseParameters(value string) string {
-	value = strings.Replace(value, "$TAG", glblVersion.GetVersionTag(), -1)
-	value = strings.Replace(value, "$VERSION", glblVersion.GetVersionString(), -1)
-	value = strings.Replace(value, "$HASH", glblGitRepo.GetRevParse(), -1)
+func parseTagParameters(value string) string {
+	value = strings.Replace(value, "@TAG@", glblVersion.GetVersionTag(), -1)
+	value = strings.Replace(value, "@VERSION@", glblVersion.GetVersionString(), -1)
+
 	return value
 }
 
@@ -82,7 +65,7 @@ func parseParametersList(valueList []string) []string {
 	returnList := make([]string, len(valueList))
 
 	for index, element := range valueList {
-		returnList[index] = parseParameters(element)
+		returnList[index] = parseTagParameters(element)
 	}
 
 	return returnList

@@ -17,8 +17,10 @@ var debugCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Workdir:\t\t%s\n", workDir)
 		fmt.Printf("Debug:\t\t\t%t\n", debug)
-		fmt.Printf("Dry-run:\t\t%t\n", dryRun)
+		// fmt.Printf("Dry-run:\t\t%t\n", dryRun)
+		fmt.Printf("TAG-Prefix:\t\t%s\n", glblVersion.GetPrefix())
 		fmt.Printf("Version:\t\t%s\n", glblVersion.GetVersionString())
+		fmt.Printf("TAG:\t\t\t%s\n", glblVersion.GetVersionTag())
 		fmt.Printf("Dirty:\t\t\t%t\n", glblGitRepo.IsDirty())
 		fmt.Printf("Hash:\t\t\t%s\n", glblGitRepo.GetRevParse())
 		fmt.Printf("Config:\t\t\t%s\n", viper.ConfigFileUsed())
@@ -29,11 +31,11 @@ var debugCmd = &cobra.Command{
 		}
 
 		// DEBUG
-		demoCommand := "docker ps -a -s -f $VERSION $HASH"
-		application, arguments := createCommand(demoCommand)
-
-		fmt.Printf("%s\n", application)
-		fmt.Printf("%s\n", arguments)
+		// demoCommand := "docker ps -a -s -f $VERSION $HASH"
+		// application, arguments := createCommand(demoCommand)
+		//
+		// fmt.Printf("%s\n", application)
+		// fmt.Printf("%s\n", arguments)
 
 		// Executing command
 		// out, err := exec.Command(application, arguments...).Output()

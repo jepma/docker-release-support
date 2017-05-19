@@ -24,7 +24,7 @@ We will check if:
 
 By default we will release patch it for you.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Print("Please provide your relase type [patch, minor, major]")
+		fmt.Print("Please provide your release type [patch, minor, major]")
 	},
 }
 
@@ -33,7 +33,8 @@ func init() {
 }
 
 func releasePreCheck() (tagLatest string) {
-	// Check if dirty
+
+	// Check if repository is dirty
 	if glblVersion.GetDirty() == true {
 		fmt.Printf("Repository contains changes, cannot release patch with a dirty tree.\n")
 		os.Exit(1)
@@ -68,6 +69,7 @@ func createCommand(command string) (application string, arguments []string) {
 	return application, arguments
 }
 
+// Replace parameters within given value string
 func parseParameters(value string) string {
 	value = strings.Replace(value, "$TAG", glblVersion.GetVersionTag(), -1)
 	value = strings.Replace(value, "$VERSION", glblVersion.GetVersionString(), -1)

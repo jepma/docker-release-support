@@ -27,3 +27,6 @@ As a user I would like to determine the format of the version string that is use
 
 ## Demo
 
+```bash
+$ clear && go run *.go --workdir /Workspace/playground/release-git-repo debug --help
+```

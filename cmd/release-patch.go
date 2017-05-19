@@ -54,6 +54,4 @@ func releasePatch() {
 	// Run post-bump code
 	fmt.Print("@TODO: Implement post-bump code\n")
 
-	os.Exit(1) // DEBUG
-
 }

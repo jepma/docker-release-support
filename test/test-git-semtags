@@ -1,0 +1,109 @@
+#!/bin/bash
+
+
+FAIL=0
+DIR=$(mktemp)
+
+function init {
+	rm -rf $DIR
+	mkdir -p $DIR
+	cd $DIR
+	git init
+	touch README.md
+	git add .
+	git commit -m 'initial import'
+}
+
+function test_init {
+	init  >/dev/null 2>&1
+
+	cd $DIR
+	! git semtags --init x && echo "FAIL: git semtags --init x failed" >&2  
+	(git add . ; git commit -m 'initialized git-semtags' ) >/dev/null 2>&1
+
+	[[ ! -f release.yaml ]] && echo "FAIL: release.yaml was not created" >&2 && FAIL=1
+
+	PREFIX=$(grep '^tag-prefix:' release.yaml | sed -e 's/^tag-prefix:[ \t]*//')
+	[[ $PREFIX != x ]] && echo "FAIL: expected tag-prefix 'x', got '$PREFIX'." >&2 && FAIL=1
+}
+
+function initial_release {
+	LEVEL=$1
+	EXPECT=$2
+
+	test_init
+	cd $DIR
+
+	! [[ $(git semtags) =~ ^0\.0\.0.* ]] && echo "FAIL: expected initial semver to begin with 0.0.0" >&2 && FAIL=1
+	! git semtags --$LEVEL && echo "FAIL: git semtags --$LEVEL failed." >&2 && FAIL=1
+
+	[[ $(git semtags) != $EXPECT ]] && echo "FAIL: expected initial version to be '$EXPECT', got '$(git semtags)'." >&2 && FAIL=1
+	[[ -z $(git tag | grep x$EXPECT) ]] && echo "FAIL: tag 'x$EXPECT is missing." >&2 && FAIL=1
+
+	TAGS=$(git tag | grep '^x[0-9].*')
+	! git semtags --$LEVEL  && echo "FAIL: failed to do another semtags" >&2&& FAIL=1
+
+	NEW_TAGS=$(git tag | grep '^x[0-9].*')
+	[[ $TAGS != $NEW_TAGS ]] && echo "FAIL: subsequent semtags --$LEVEL resulted in new tags. expected '$TAGS', got '$NEW_TAGS'" >&2 && FAIL=1
+}
+
+function check_tag {
+	if [[ -z $(git tag | grep "^$1\$") ]] ; then
+		echo "FAIL: tag '$1' is missing." >&2 
+		return 1
+	fi
+	return 0
+}
+
+function check_versions {
+	LEVEL=$1
+	EXPECT=$2
+	NEXT=$3
+
+	cd $DIR
+	initial_release $1 $2
+	
+	touch README.more
+	VERSION_EXPECT="$EXPECT-dirty"
+	[[ $(git semtags) != $VERSION_EXPECT ]] && echo "FAIL: expected version to be '$VERSION_EXPECT', got ' $(git semtags)'" >&2 && FAIL=1
+
+	git semtags --$LEVEL && echo "FAIL: git semtags should have failed to perform --$LEVEL, but succeeded." >&2 && exit 1
+
+	git add README.more
+	git commit -m 'added '
+
+	VERSION_EXPECT="$EXPECT-$(git rev-parse --short HEAD)"
+	[[ $(git semtags) != $VERSION_EXPECT ]] && echo "FAIL: expected version to be '$VERSION_EXPECT', got ' $(git semtags)'" >&2 && FAIL=1
+	
+	touch README.nomore
+	VERSION_EXPECT="$EXPECT-$(git rev-parse --short HEAD)-dirty"
+	[[ $(git semtags) != $VERSION_EXPECT ]] && echo "FAIL: expected version to be '$VERSION_EXPECT', got ' $(git semtags)'" >&2 && FAIL=1
+
+	git add README.nomore
+	git commit -m 'nomore'
+	VERSION_EXPECT="$EXPECT-$(git rev-parse --short HEAD)"
+	[[ $(git semtags) != $VERSION_EXPECT ]] && echo "FAIL: expected version to be '$VERSION_EXPECT', got ' $(git semtags)'" >&2 && FAIL=1
+	
+	! git semtags --$LEVEL && echo "FAIL: git semtags $LEVEL failed. " >&2 && FAIL=1
+	! check_tag x$NEXT && FAIL=1
+	[[ $(git semtags) != $NEXT ]] && echo "FAIL: expected next version '$NEXT', got '$(git semtags)'" >&2 && FAIL=1
+}
+
+function main {
+	initial_release patch-release 0.0.1
+	initial_release minor-release 0.1.0
+	initial_release major-release 1.0.0
+	check_versions patch-release 0.0.1 0.0.2
+	check_versions minor-release 0.1.0 0.2.0
+	check_versions major-release 1.0.0 2.0.0
+}
+
+main "$@"
+
+cd $DIR
+find . | grep -v ./.git
+git tag
+git status
+rm -rf $DIR
+
+exit $FAIL

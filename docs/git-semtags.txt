@@ -1,0 +1,98 @@
+git-semtags(1)
+=============
+
+Name
+----
+git-semtags - show, create and bump semver tags
+
+Synopsis
+--------
+git semtags [ --init [tag-prefix [pre-tag-command]] | --patch-release | --minor-release | --major-release ] [ directory ] 
+
+Options
+--------
+--patch-release::
+	bump the patch release level and create the tag.
+
+--minor-release::
+	bump the minor release level and create the tag.
+
+--major-release::
+	bump the major release level and create the tag.
+
+--init [<tag-prefix>]::
+	create a `release.yaml` configuration file with the
+	tag-prefix, see <<configuration,Configuration>>.
+
+Description
+-----------
+This command shows, creates and bumps semantic version tags in your git repository.  It can be used 
+to track the release of a single git repository, or to releases of different components in a single git repository.
+
+
+When you run `git semtags` it will show the current version of the workspace, based on the content of the directory. 
+`git semtags` will compare the content of the directory with the highest semver tag in git.  This will allow you to use 
+the version returned by git-semtags in a continuous delivery environment.
+
+The following table will show you the returned value, depending on the content of the directory:
+
+[width="80%",cols="45%,55%",options="header"]
+|=========================================================
+|format|when the content of the directory
+|<major.minor.patch>|is equal to tagged content in git
+|<major.minor.patch>-<commit-hash>|is not equal to the tagged content
+|<major.minor.patch>-dirty|has uncommited changes 
+|<major.minor.patch>-<commit-hash>-dirty|has both committed and uncommitted changes
+|=========================================================
+
+When there are no outstanding changes in this directory, you can use either --patch-release, --minor-release or --major-release 
+to bump the respective level and create the tag. The tag created uses the following format:
+
+--------------------------
+<tag-prefix><major>.<minor>.<patch>
+--------------------------
+
+When you want to start using semtags, run --init in order to create the `release.yaml` configuration file in the specified
+directory.
+
+
+anchor:configuration[]
+
+Configuration
+-------------
+`git semtags` uses the configuration file `release.yaml` which 
+must exist for proper operation.  The file must contain the following fields:
+
+- tag-prefix
+	the prefix for the semver tags of this directory.
+
+	The default prefix is 'v'. When you have multiple
+	components in a single git repository that you
+	want to tag with a release, make sure these
+	tags are unique.
+
+	the tag prefix should match the following 
+	regular expression: [a-zA-Z0-9-_]*[a-zA-Z-_]+
+
+- pre-tag-command
+	the command to run before the tag is applied.
+
+	The pre-tag-command may contain @VERSION@ and @TAG@
+	which will contain the new version and tag. This command
+	will be run before the tag is created. Any changes to the workspace
+	after the command has run will be committed before the tag is created.
+
+for example:
+
+--------------------------
+tag-prefix: v
+pre-tag-command: "sed -i -e 's/<version>[^<]*</version>/<version>@VERSION@<version>/' pom.xml"
+--------------------------
+
+Design decisions
+----------------
+Caveats
+-------
+- You must ensure that they tag-prefix is unique in your git repository.
+- When there are no tags with the prefix exist, the version will be set to 0.0.0.
+

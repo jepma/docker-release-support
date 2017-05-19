@@ -3,7 +3,7 @@
 
 package main
 
-import "github.com/jepma/release-support/cmd"
+import "github.com/jepma/git-semtags/cmd"
 
 func main() {
 	cmd.Execute()

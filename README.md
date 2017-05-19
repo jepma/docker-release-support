@@ -1,46 +1,30 @@
-# Release Support - Tjibbe
+# git-semtags
 
-Support tooling that tries to solve the issue of properly tagging your code.
+git-semtags is a git plugin command that shows, creates and bumps semantic version tags in your git repository.  It can be used 
+to track the release of a single git repository, or to releases of different components in a single git repository.
 
-## Inspired
-
-This application is inspired by the Makefile originally developed by Mark van Holsteijn. We wanted the application to be able to work without configuration files so there are some small changes.
-
-## Libraries used
-
-- https://github.com/spf13/cobra
-- https://github.com/spf13/viper
-- https://github.com/jepma/go-versioning
-- https://github.com/jepma/go-git
-- https://github.com/jepma/go-vipersaveconfig
-
-## Building
-
-To build a binary that you could use, you have to first fetch it's dependencies.
-
-```
-$ go get
-```
-
-Now we can build the binary
-
-```
-$ go build -o /usr/local/bin/git-semver
-```
-
-## How does it work
-
-## Wishlist
-
-### 1. Custom version format
-
-As a user I would like to determine the format of the version string that is used in the tag. By default this value can be configured as `v0.0.1` for example but I would also would like to use pre-configured settings like:
-
-- no. of commits
-- last commit hash
-
-## Demo
+see [docs/git-semtags.txt](git-semtags) manual page for details
+ 
+## Examples
 
 ```bash
-$ go run *.go --workdir /Workspace/playground/release-git-repo debug --help
+$ git init
+$ touch README.md
+$ git add README.md
+$ git semtags --init version-
+$ git commit -m 'initial import'
+$ git semtags  --patch-release
+Bumped to version 0.0.1 with tag version-0.0.1
+
+$ touch README.more
+$ git semtags
+0.0.1-dirty
+
+$ git add .
+$ git commit -m 'more'
+$ git semtags
+0.0.1-bd7b174
+
+$ git semtags --minor-release
+Bumped to version 0.1.0 with tag version-0.1.0
 ```
